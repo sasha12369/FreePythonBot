@@ -1,0 +1,18 @@
+#Задание 1 к уроку 4
+
+import telebot
+
+token = "Мой токен"
+
+bot = telebot.TeleBot(token)
+
+@bot.message_handler(content_types=["text"])
+def echo(message):
+    word = 'Саша'
+    answer = message.text
+    if word in message.text:
+        answer = 'Ба! Знакомые все лица!'
+    bot.send_message(message.chat.id, answer)
+
+#Постоянное обращение к серверам телеграма
+bot.polling(non_stop=True)
