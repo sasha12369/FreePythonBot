@@ -1,0 +1,67 @@
+import telebot
+import random
+
+token = "Мой токен"
+
+HELP = """
+/help - напечатать справку по программе.
+/add - добавить задачу в список (название задачи запрашиваем у пользователя).
+/show - напечатать все добавленные задачи.
+/random - добавить случайную команду"""
+
+Random_tasks = ['Записаться на курс в Нетологию','Покормить кошку','Помыть машину','Написать Гвидо письмо','Покормить собаку']
+
+bot = telebot.TeleBot(token)
+
+tasks = {}
+
+def add_todo(date, task, category):
+
+  if date in tasks:
+    tasks[date].append([task, category])
+  else:
+    tasks[date] = [[task, category]]
+
+@bot.message_handler(commands = ["help"])
+def help(message):
+    bot.send_message(message.chat.id, HELP)
+
+@bot.message_handler(commands = ["show","print"])
+def show(message):
+    text = ''
+    splitted_command = message.text.split()
+    count_date = len(splitted_command)
+    for i in range(count_date-1):
+        date = splitted_command[i+1].lower()
+        text = text + date.upper() + '\n'
+        if date in tasks:
+            for task in tasks[date]:
+                text = text + '[] ' + task[0] + ' @' +  task[1] + '\n'
+        else:
+            text = text + 'Задач на эту дату нет' + '\n'
+    bot.send_message(message.chat.id, text)
+
+@bot.message_handler(commands = ["add", "random"])
+def add(message):
+    splitted_command = message.text.split(';', 3)
+    if 'add' in splitted_command[0]:
+        date = splitted_command[1].lower().strip()
+        task = splitted_command[2].strip()
+        category = splitted_command[3].strip()
+    elif 'random' in splitted_command[0]:
+        date = 'сегодня'
+        task = random.choice(Random_tasks)
+        category = 'random'
+    if len(task) >= 3:
+        add_todo(date, task, category)
+        bot.send_message(message.chat.id, 'Задача ' + task + ' добавлена на дату ' + date)
+    else:
+        bot.send_message(message.chat.id, 'Задача слишком короткая, поэтому не добавлена')
+
+@bot.message_handler(content_types=["text"])
+def echo(message):
+    if message.text == 'help':
+        help(message)
+
+#Постоянное обращение к серверам телеграма
+bot.polling(non_stop=True)
